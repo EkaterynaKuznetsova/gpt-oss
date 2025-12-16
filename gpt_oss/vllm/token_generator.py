@@ -10,20 +10,30 @@ class TokenGenerator:
         self.engine = LLMEngine.from_engine_args(args)
         self.request_id = 0
 
-    def generate(self,
-                 prompt_tokens: list[int],
-                 stop_tokens: list[int] | None = None,
-                 temperature: float = 1.0,
-                 max_tokens: int = 0,
-                 return_logprobs: bool = False):
+    def generate(
+        self,
+        prompt_tokens: list[int],
+        stop_tokens: list[int] | None = None,
+        temperature: float = 1.0,
+        max_tokens: int = 0,
+        return_logprobs: bool = False,
+        top_p: float | None = 1.0,
+        top_k: int | None = None,
+        seed: int | None = None,
+    ):
         if max_tokens == 0:
             max_tokens = None
         request_id = str(self.request_id)
         self.request_id += 1
-        sampling_params = SamplingParams(temperature=temperature,
-                                         max_tokens=max_tokens,
-                                         stop_token_ids=stop_tokens,
-                                         logprobs=0 if return_logprobs else None)
+        sampling_params = SamplingParams(
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stop_token_ids=stop_tokens,
+            logprobs=0 if return_logprobs else None,
+            top_p=top_p,
+            top_k=top_k,
+            seed=seed,
+        )
         prompt = TokensPrompt(prompt_token_ids=prompt_tokens)
         self.engine.add_request(request_id, prompt, sampling_params)
         last_token_id = []
