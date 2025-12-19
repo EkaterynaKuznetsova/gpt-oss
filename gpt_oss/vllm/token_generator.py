@@ -8,7 +8,6 @@ class TokenGenerator:
             tensor_parallel_size=tensor_parallel_size,
             gpu_memory_utilization=gpu_memory_utilization,
             max_num_batched_tokens=2048,
-            tool_call_parser="openai",
         )
         self.engine = LLMEngine.from_engine_args(args)
         self.request_id = 0
