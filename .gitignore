@@ -4,4 +4,5 @@ tmp*
 __pycache__
 *.egg*
 node_modules/
-*.log
+*.logdata/ips/*_results*.jsonl
+*.safetensors
