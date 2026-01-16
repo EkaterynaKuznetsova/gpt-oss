@@ -14,7 +14,7 @@ from experiments.ips.metrics import normalized_similarity, python_ast_equal
 from experiments.ips.infer import InferenceConfig, DeterministicInference
 
 # --- PG Hyperparameters ---
-ITERATIONS = 1000
+ITERATIONS = 5000
 LEARNING_RATE = 0.01
 GAMMA = 0.99  # Discount factor
 QUALITY_THRESHOLD = 0.3
@@ -111,9 +111,10 @@ def evaluate_prompt(prompt: str, target: Dict[str, Any], infer: DeterministicInf
     if ast_eq:
         l_val = 1.0 - sim
     else:
-        l_val = 1.0 - (sim * 0.3)
+        l_val = 1.0 - (sim * 0.5)  # More strict penalty for incorrect code (min 0.5)
     
-    quality_passed = l_val <= QUALITY_THRESHOLD
+    # Two-stage filtering: require AST match + low L_val
+    quality_passed = (ast_eq == True) and (l_val <= QUALITY_THRESHOLD)
     
     return {
         'prompt': prompt,
@@ -131,7 +132,7 @@ class PolicyNetwork:
         self.num_actions = num_actions
         self.learning_rate = learning_rate
         
-        # Веса: input_dim x num_actions
+        # Weights: input_dim x num_actions
         self.weights = np.random.randn(input_dim, num_actions) * 0.01
         self.bias = np.zeros(num_actions)
         
@@ -205,7 +206,7 @@ def main():
     parser.add_argument('--learning-rate', type=float, default=LEARNING_RATE)
     parser.add_argument('--quality-threshold', type=float, default=QUALITY_THRESHOLD)
     parser.add_argument('--output', type=Path, default=Path('data/ips/stage3_pg_results.jsonl'))
-    parser.add_argument('--max-new-tokens', type=int, default=512, help='Maximum number of new tokens to generate')
+    parser.add_argument('--max-new-tokens', type=int, default=1024, help='Maximum number of new tokens to generate')
     args = parser.parse_args()
 
     # Load targets and initialize inference
@@ -227,7 +228,7 @@ def main():
     actions = ['drop', 'swap', 'insert', 'synonymize']
     
     # Start with random initial prompt
-    current_prompt = random.choice(initial_prompts)
+    current_prompt = initial_prompts[0] if initial_prompts else random.choice(initial_prompts)
     current_eval = evaluate_prompt(current_prompt, target, infer)
     best_eval = deepcopy(current_eval)
     

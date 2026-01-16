@@ -87,9 +87,10 @@ def evaluate_prompt(prompt: str, target: Dict[str, Any], infer: DeterministicInf
     if ast_eq:
         l_val = 1.0 - sim
     else:
-        l_val = 1.0 - (sim * 0.3)
+        l_val = 1.0 - (sim * 0.5)  # More strict penalty for incorrect code (min 0.5)
     
-    quality_passed = l_val <= QUALITY_THRESHOLD
+    # Two-stage filtering: require AST match + low L_val
+    quality_passed = (ast_eq == True) and (l_val <= QUALITY_THRESHOLD)
     
     return {
         'prompt': prompt,

@@ -144,8 +144,10 @@ def evaluate_prompt(prompt: str, target: Dict[str, Any], infer: DeterministicInf
     if ast_eq:
         l_val = 1.0 - sim  # If AST matches, use similarity
     else:
-        l_val = 1.0 - (sim * 0.3)  # If AST does not match, penalize more (min 0.7)
-    quality_passed = l_val <= QUALITY_THRESHOLD
+        l_val = 1.0 - (sim * 0.5)  # More strict penalty for incorrect code (min 0.5)
+    
+    # Two-stage filtering: require AST match + low L_val
+    quality_passed = (ast_eq == True) and (l_val <= QUALITY_THRESHOLD)
     return {
         'prompt': prompt,
         'generated_code': generated,
